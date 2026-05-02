@@ -1,3 +1,12 @@
+- bean: "Guatemala"
+  roaster: "Illy"
+  method: espresso
+  dose_g: 18
+  yield_g: 35
+  time_s: 25-26
+  grind: 7-8
+  notes: "Standard taste profile, with a hint of chocolate."
+
 - bean: "Sagada Arabica"
   roaster: "Capital Grains"
   method: espresso
