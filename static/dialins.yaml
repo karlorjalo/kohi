@@ -1,3 +1,21 @@
+- bean: "Espresso"
+  roaster: "Lavazza"
+  method: espresso
+  dose_g: 18
+  yield_g: 36
+  time_s: 28
+  grind: 7-8
+  notes: "City roast with no bitterness, very round but light body."
+
+- bean: "Grizzly Claw"
+  roaster: "Kick Horse"
+  method: espresso
+  dose_g: 16
+  yield_g: 30
+  time_s: 28
+  grind: 14-15
+  notes: "Dark roast with little bitterness, very round body."
+
 - bean: "Guatemala"
   roaster: "Illy"
   method: espresso
