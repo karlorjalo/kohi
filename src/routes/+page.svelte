@@ -20,6 +20,21 @@
 
 	const filtering = $derived(query.trim() !== '' || methodFilter !== null || grinderFilter !== null);
 
+	let searchEl = $state(null);
+
+	function handleKeydown(event) {
+		if (event.key !== '/') return;
+		const target = event.target;
+		if (
+			target instanceof HTMLElement &&
+			(target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
+		) {
+			return;
+		}
+		event.preventDefault();
+		searchEl?.focus();
+	}
+
 	function formatTime(input) {
 		// Handle range strings like "28-32"
 		if (typeof input === 'string' && input.includes('-')) {
@@ -70,6 +85,8 @@
 	<title>Kohi · Coffee Dial-In Log</title>
 </svelte:head>
 
+<svelte:window onkeydown={handleKeydown} />
+
 <main>
 	<header class="site-header">
 		<div class="site-title">
@@ -79,8 +96,9 @@
 		<input
 			class="search"
 			type="search"
-			placeholder="Search beans, roasters, notes&hellip;"
+			placeholder="Search beans, roasters, notes&hellip; ( / )"
 			aria-label="Search dial-ins"
+			bind:this={searchEl}
 			bind:value={query}
 		/>
 		{#if methods.length > 1 || grinderNames.length > 0}
