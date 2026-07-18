@@ -4,7 +4,8 @@
   dose_g: 18
   yield_g: 36
   time_s: 28
-  grind: 7-8
+  grind(Breville): 7-8
+  grind(K6): 28
   notes: "City roast with no bitterness, very round but light body."
 
 - bean: "Grizzly Claw"
