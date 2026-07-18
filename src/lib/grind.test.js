@@ -15,6 +15,33 @@ describe('formatRange', () => {
 	});
 });
 
+describe('matchesQuery', () => {
+	const entry = {
+		bean: 'Grizzly Claw',
+		roaster: 'Kick Horse',
+		notes: 'Dark roast with little bitterness.',
+		'grind(K6)': 28
+	};
+
+	it('matches any field case-insensitively', () => {
+		assert.equal(typeof lib.matchesQuery, 'function');
+		assert.equal(lib.matchesQuery(entry, 'grizzly'), true);
+		assert.equal(lib.matchesQuery(entry, 'KICK'), true);
+		assert.equal(lib.matchesQuery(entry, 'bitterness'), true);
+		assert.equal(lib.matchesQuery(entry, 'k6'), true);
+	});
+
+	it('returns false when nothing matches', () => {
+		assert.equal(lib.matchesQuery(entry, 'ethiopia'), false);
+	});
+
+	it('matches everything on an empty or blank query', () => {
+		assert.equal(lib.matchesQuery(entry, ''), true);
+		assert.equal(lib.matchesQuery(entry, '   '), true);
+		assert.equal(lib.matchesQuery(entry, undefined), true);
+	});
+});
+
 describe('getGrinds', () => {
 	it('returns typed grind settings in entry order', () => {
 		assert.equal(typeof lib.getGrinds, 'function');

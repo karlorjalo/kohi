@@ -1,10 +1,16 @@
 <script>
-	import { getGrinds, formatRange } from '$lib';
+	import { getGrinds, formatRange, matchesQuery } from '$lib';
 
 	let { data } = $props();
 
-	const espresso = $derived(data.dialins.filter(d => d.method === 'espresso'));
-	const pourover = $derived(data.dialins.filter(d => d.method === 'pourover'));
+	let query = $state('');
+
+	const espresso = $derived(
+		data.dialins.filter(d => d.method === 'espresso' && matchesQuery(d, query))
+	);
+	const pourover = $derived(
+		data.dialins.filter(d => d.method === 'pourover' && matchesQuery(d, query))
+	);
 
 	function formatTime(input) {
 		// Handle range strings like "28-32"
@@ -58,9 +64,22 @@
 
 <main>
 	<header class="site-header">
-		<h1>Kohi</h1>
-		<p class="subtitle">Coffee Dial-In Log</p>
+		<div class="site-title">
+			<h1>Kohi</h1>
+			<p class="subtitle">Coffee Dial-In Log</p>
+		</div>
+		<input
+			class="search"
+			type="search"
+			placeholder="Search beans, roasters, notes&hellip;"
+			aria-label="Search dial-ins"
+			bind:value={query}
+		/>
 	</header>
+
+	{#if query.trim() !== '' && espresso.length === 0 && pourover.length === 0}
+		<p class="empty">No entries match &ldquo;{query}&rdquo;.</p>
+	{/if}
 
 	{#if espresso.length > 0}
 		<section>
@@ -235,6 +254,7 @@
 
 <style>
 	:global(:root) {
+		color-scheme: light dark;
 		--bg: #f6f4ef;
 		--surface: #ffffff;
 		--ink: #23201b;
@@ -243,8 +263,23 @@
 		--line: #e4dfd4;
 		--line-soft: #eeeae0;
 		--accent: #7c5335;
+		--shadow: 0 1px 2px rgba(35, 32, 27, 0.04), 0 4px 12px rgba(35, 32, 27, 0.03);
 		--serif: 'Source Serif 4', Georgia, serif;
 		--sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	}
+
+	@media (prefers-color-scheme: dark) {
+		:global(:root) {
+			--bg: #171410;
+			--surface: #211d18;
+			--ink: #ece7dd;
+			--ink-soft: #b3ab9c;
+			--ink-muted: #8a8171;
+			--line: #37312a;
+			--line-soft: #2b2621;
+			--accent: #c99e6e;
+			--shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15);
+		}
 	}
 
 	:global(body) {
@@ -258,22 +293,33 @@
 	main {
 		max-width: 680px;
 		margin: 0 auto;
-		padding: 3.5rem 1.5rem 4rem;
+		padding: 0 1.5rem 4rem;
 	}
 
-	/* Site header */
+	/* Sticky site header */
 	.site-header {
+		position: sticky;
+		top: 0;
+		z-index: 10;
 		display: flex;
-		align-items: baseline;
+		align-items: center;
 		justify-content: space-between;
 		gap: 1rem;
-		padding-bottom: 1.25rem;
-		margin-bottom: 2.75rem;
-		border-bottom: 1px solid var(--line);
+		padding: 1.5rem 0 1.1rem;
+		margin-bottom: 2rem;
+		background: color-mix(in srgb, var(--bg) 85%, transparent);
+		-webkit-backdrop-filter: blur(10px);
+		backdrop-filter: blur(10px);
+	}
+
+	@supports not (backdrop-filter: blur(10px)) {
+		.site-header {
+			background: var(--bg);
+		}
 	}
 
 	h1 {
-		font-size: 1.9rem;
+		font-size: 1.5rem;
 		font-weight: 700;
 		margin: 0;
 		letter-spacing: -0.01em;
@@ -281,11 +327,42 @@
 
 	.subtitle {
 		font-family: var(--sans);
-		font-size: 0.75rem;
+		font-size: 0.68rem;
 		font-weight: 500;
 		text-transform: uppercase;
 		letter-spacing: 0.14em;
 		color: var(--ink-muted);
+		margin: 0.15rem 0 0;
+	}
+
+	.search {
+		flex-shrink: 1;
+		width: min(16rem, 100%);
+		padding: 0.55rem 1rem;
+		border: 1px solid var(--line);
+		border-radius: 999px;
+		background: var(--surface);
+		font-family: var(--sans);
+		font-size: 0.9rem;
+		color: var(--ink);
+		outline: none;
+		transition: border-color 0.15s ease;
+	}
+
+	.search::placeholder {
+		color: var(--ink-muted);
+	}
+
+	.search:focus {
+		border-color: var(--accent);
+	}
+
+	.empty {
+		font-family: var(--sans);
+		font-size: 0.95rem;
+		color: var(--ink-muted);
+		text-align: center;
+		padding: 3rem 0;
 		margin: 0;
 	}
 
@@ -301,13 +378,6 @@
 		letter-spacing: 0.12em;
 		color: var(--ink-soft);
 		margin: 0 0 1.25rem;
-	}
-
-	h2::after {
-		content: '';
-		flex: 1;
-		height: 1px;
-		background: var(--line);
 	}
 
 	.count {
@@ -326,7 +396,7 @@
 		border-radius: 10px;
 		padding: 1.5rem;
 		margin-bottom: 1.25rem;
-		box-shadow: 0 1px 2px rgba(35, 32, 27, 0.04), 0 4px 12px rgba(35, 32, 27, 0.03);
+		box-shadow: var(--shadow);
 	}
 
 	.card-header {
@@ -334,9 +404,7 @@
 		align-items: flex-start;
 		justify-content: space-between;
 		gap: 1rem;
-		padding-bottom: 1rem;
 		margin-bottom: 1.15rem;
-		border-bottom: 1px solid var(--line-soft);
 	}
 
 	.roaster {
@@ -431,9 +499,7 @@
 
 	/* Notes */
 	.notes {
-		margin-top: 1.25rem;
-		padding-top: 1rem;
-		border-top: 1px solid var(--line-soft);
+		margin-top: 1.35rem;
 	}
 
 	.notes-label {
@@ -459,9 +525,7 @@
 
 	/* Pour schedule */
 	.pour-schedule {
-		margin-top: 1.25rem;
-		padding-top: 1rem;
-		border-top: 1px solid var(--line-soft);
+		margin-top: 1.35rem;
 	}
 
 	.pour-schedule-header {
@@ -564,12 +628,18 @@
 
 	@media (max-width: 520px) {
 		main {
-			padding: 2.5rem 1.25rem 3rem;
+			padding: 0 1.25rem 3rem;
 		}
 
 		.site-header {
 			flex-direction: column;
-			gap: 0.35rem;
+			align-items: stretch;
+			gap: 0.75rem;
+			padding: 1.1rem 0 0.9rem;
+		}
+
+		.search {
+			width: 100%;
 		}
 
 		.params {
