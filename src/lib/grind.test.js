@@ -42,6 +42,61 @@ describe('matchesQuery', () => {
 	});
 });
 
+describe('getGrinderNames', () => {
+	it('returns unique grinder names in first-seen order', () => {
+		assert.equal(typeof lib.getGrinderNames, 'function');
+		const entries = [
+			{ 'grind(Breville)': 7, 'grind(K6)': 28 },
+			{ grind: 14 },
+			{ 'grind(K6)': 30 }
+		];
+		assert.deepEqual(lib.getGrinderNames(entries), ['Breville', 'K6']);
+	});
+
+	it('returns an empty list when no entry names a grinder', () => {
+		assert.deepEqual(lib.getGrinderNames([{ grind: 7 }, { bean: 'X' }]), []);
+	});
+});
+
+describe('filterEntries', () => {
+	const entries = [
+		{ bean: 'Espresso', roaster: 'Lavazza', method: 'espresso', 'grind(K6)': 28 },
+		{ bean: 'Grizzly Claw', roaster: 'Kick Horse', method: 'espresso', grind: 14 },
+		{ bean: 'Colombia Huila', roaster: 'Onyx', method: 'pourover', 'grind(Breville)': 24 }
+	];
+
+	it('returns everything with no filters', () => {
+		assert.equal(typeof lib.filterEntries, 'function');
+		assert.deepEqual(lib.filterEntries(entries, {}), entries);
+		assert.deepEqual(lib.filterEntries(entries), entries);
+	});
+
+	it('filters by method', () => {
+		assert.deepEqual(
+			lib.filterEntries(entries, { method: 'pourover' }).map(e => e.bean),
+			['Colombia Huila']
+		);
+	});
+
+	it('filters by grinder name', () => {
+		assert.deepEqual(
+			lib.filterEntries(entries, { grinder: 'K6' }).map(e => e.bean),
+			['Espresso']
+		);
+	});
+
+	it('combines query, method, and grinder filters', () => {
+		assert.deepEqual(
+			lib.filterEntries(entries, { query: 'lavazza', method: 'espresso', grinder: 'K6' }).map(e => e.bean),
+			['Espresso']
+		);
+		assert.deepEqual(
+			lib.filterEntries(entries, { query: 'lavazza', method: 'pourover' }),
+			[]
+		);
+	});
+});
+
 describe('getGrinds', () => {
 	it('returns typed grind settings in entry order', () => {
 		assert.equal(typeof lib.getGrinds, 'function');

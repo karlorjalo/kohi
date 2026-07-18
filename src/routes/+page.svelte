@@ -1,16 +1,24 @@
 <script>
-	import { getGrinds, formatRange, matchesQuery } from '$lib';
+	import { getGrinds, formatRange, filterEntries, getGrinderNames } from '$lib';
 
 	let { data } = $props();
 
 	let query = $state('');
+	let methodFilter = $state(null);
+	let grinderFilter = $state(null);
 
-	const espresso = $derived(
-		data.dialins.filter(d => d.method === 'espresso' && matchesQuery(d, query))
+	const methodLabels = { espresso: 'Espresso', pourover: 'Pour Over' };
+
+	const methods = $derived([...new Set(data.dialins.map(d => d.method))].filter(Boolean));
+	const grinderNames = $derived(getGrinderNames(data.dialins));
+
+	const filtered = $derived(
+		filterEntries(data.dialins, { query, method: methodFilter, grinder: grinderFilter })
 	);
-	const pourover = $derived(
-		data.dialins.filter(d => d.method === 'pourover' && matchesQuery(d, query))
-	);
+	const espresso = $derived(filtered.filter(d => d.method === 'espresso'));
+	const pourover = $derived(filtered.filter(d => d.method === 'pourover'));
+
+	const filtering = $derived(query.trim() !== '' || methodFilter !== null || grinderFilter !== null);
 
 	function formatTime(input) {
 		// Handle range strings like "28-32"
@@ -75,10 +83,36 @@
 			aria-label="Search dial-ins"
 			bind:value={query}
 		/>
+		{#if methods.length > 1 || grinderNames.length > 0}
+			<div class="chips" role="group" aria-label="Quick filters">
+				{#if methods.length > 1}
+					{#each methods as method}
+						<button
+							class="chip"
+							class:active={methodFilter === method}
+							aria-pressed={methodFilter === method}
+							onclick={() => (methodFilter = methodFilter === method ? null : method)}
+						>
+							{methodLabels[method] ?? method}
+						</button>
+					{/each}
+				{/if}
+				{#each grinderNames as grinder}
+					<button
+						class="chip"
+						class:active={grinderFilter === grinder}
+						aria-pressed={grinderFilter === grinder}
+						onclick={() => (grinderFilter = grinderFilter === grinder ? null : grinder)}
+					>
+						{grinder}
+					</button>
+				{/each}
+			</div>
+		{/if}
 	</header>
 
-	{#if query.trim() !== '' && espresso.length === 0 && pourover.length === 0}
-		<p class="empty">No entries match &ldquo;{query}&rdquo;.</p>
+	{#if filtering && espresso.length === 0 && pourover.length === 0}
+		<p class="empty">No entries match the current filters.</p>
 	{/if}
 
 	{#if espresso.length > 0}
@@ -302,6 +336,7 @@
 		top: 0;
 		z-index: 10;
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
 		justify-content: space-between;
 		gap: 1rem;
@@ -355,6 +390,38 @@
 
 	.search:focus {
 		border-color: var(--accent);
+	}
+
+	/* Quick filter chips */
+	.chips {
+		flex-basis: 100%;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.4rem;
+	}
+
+	.chip {
+		padding: 0.3rem 0.75rem;
+		border: 1px solid var(--line);
+		border-radius: 999px;
+		background: var(--surface);
+		font-family: var(--sans);
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--ink-soft);
+		cursor: pointer;
+		transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+	}
+
+	.chip:hover {
+		border-color: var(--accent);
+	}
+
+	.chip.active {
+		border-color: var(--accent);
+		background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+		color: var(--accent);
 	}
 
 	.empty {

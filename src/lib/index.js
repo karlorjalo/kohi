@@ -19,6 +19,25 @@ export function matchesQuery(entry, query) {
 		.includes(q);
 }
 
+export function getGrinderNames(entries) {
+	const names = [];
+	for (const entry of entries) {
+		for (const { type } of getGrinds(entry)) {
+			if (type && !names.includes(type)) names.push(type);
+		}
+	}
+	return names;
+}
+
+export function filterEntries(entries, { query = '', method = null, grinder = null } = {}) {
+	return entries.filter(
+		e =>
+			matchesQuery(e, query) &&
+			(!method || e.method === method) &&
+			(!grinder || getGrinds(e).some(g => g.type === grinder))
+	);
+}
+
 export function getGrinds(entry) {
 	const typed = Object.keys(entry)
 		.map(key => ({ key, match: key.match(/^grind\((.*)\)$/) }))
