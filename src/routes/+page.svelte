@@ -1,4 +1,6 @@
 <script>
+	import { getGrinds } from '$lib';
+
 	let { data } = $props();
 
 	const espresso = $derived(data.dialins.filter(d => d.method === 'espresso'));
@@ -84,10 +86,12 @@
 							<span class="label">{@html icons.time} Time</span>
 							<span class="value">{formatTime(entry.time_s)}</span>
 						</div>
-						<div class="param">
-							<span class="label">{@html icons.grind} Grind</span>
-							<span class="value">{entry.grind}</span>
-						</div>
+						{#each getGrinds(entry) as grind}
+							<div class="param">
+								<span class="label">{@html icons.grind} Grind</span>
+								<span class="value">{grind.setting}{#if grind.type} &middot; {grind.type}{/if}</span>
+							</div>
+						{/each}
 						{#if entry.temperature_c}
 							<div class="param">
 								<span class="label">{@html icons.temp} Temp</span>
@@ -132,10 +136,12 @@
 							<span class="label">{@html icons.brewer} Brewer</span>
 							<span class="value">{entry.brewer}</span>
 						</div>
-						<div class="param">
-							<span class="label">{@html icons.grind} Grind</span>
-							<span class="value">{entry.grind}</span>
-						</div>
+						{#each getGrinds(entry) as grind}
+							<div class="param">
+								<span class="label">{@html icons.grind} Grind</span>
+								<span class="value">{grind.setting}{#if grind.type} &middot; {grind.type}{/if}</span>
+							</div>
+						{/each}
 						{#if entry.temperature_c}
 							<div class="param">
 								<span class="label">{@html icons.temp} Temp</span>
