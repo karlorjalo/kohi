@@ -1,3 +1,7 @@
+export function formatRange(value) {
+	return String(value).replace(/(\d)\s*-\s*(\d)/g, '$1–$2');
+}
+
 export function getGrinds(entry) {
 	const typed = Object.keys(entry)
 		.map(key => ({ key, match: key.match(/^grind\((.*)\)$/) }))

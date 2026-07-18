@@ -1,5 +1,5 @@
 <script>
-	import { getGrinds } from '$lib';
+	import { getGrinds, formatRange } from '$lib';
 
 	let { data } = $props();
 
@@ -10,7 +10,7 @@
 		// Handle range strings like "28-32"
 		if (typeof input === 'string' && input.includes('-')) {
 			const [start, end] = input.split('-').map(Number);
-			return `${formatTimeSeconds(start)}-${formatTimeSeconds(end)}`;
+			return `${formatTimeSeconds(start)}–${formatTimeSeconds(end)}`;
 		}
 		// Handle single numeric values
 		return formatTimeSeconds(Number(input));
@@ -53,21 +53,26 @@
 </script>
 
 <svelte:head>
-	<title>Kohi - Coffee Dial-In</title>
+	<title>Kohi · Coffee Dial-In Log</title>
 </svelte:head>
 
 <main>
-	<h1>Kohi</h1>
-	<p class="subtitle">Coffee Dial-In Log</p>
+	<header class="site-header">
+		<h1>Kohi</h1>
+		<p class="subtitle">Coffee Dial-In Log</p>
+	</header>
 
 	{#if espresso.length > 0}
 		<section>
-			<h2>Espresso</h2>
+			<h2>Espresso <span class="count">{espresso.length}</span></h2>
 			{#each espresso as entry}
-				<div class="card">
+				{@const grinds = getGrinds(entry)}
+				<article class="card">
 					<div class="card-header">
-						<h3>{entry.bean}</h3>
-						<span class="roaster">{entry.roaster}</span>
+						<div class="card-title">
+							<span class="roaster">{entry.roaster}</span>
+							<h3>{entry.bean}</h3>
+						</div>
 					</div>
 					<div class="params">
 						<div class="param">
@@ -86,12 +91,21 @@
 							<span class="label">{@html icons.time} Time</span>
 							<span class="value">{formatTime(entry.time_s)}</span>
 						</div>
-						{#each getGrinds(entry) as grind}
+						{#if grinds.length > 0}
 							<div class="param">
 								<span class="label">{@html icons.grind} Grind</span>
-								<span class="value">{grind.setting}{#if grind.type} &middot; {grind.type}{/if}</span>
+								{#if grinds.length === 1 && !grinds[0].type}
+									<span class="value">{formatRange(grinds[0].setting)}</span>
+								{:else}
+									<div class="grind-grid">
+										{#each grinds as grind}
+											<span class="grind-name">{grind.type ?? '—'}</span>
+											<span class="grind-setting">{formatRange(grind.setting)}</span>
+										{/each}
+									</div>
+								{/if}
 							</div>
-						{/each}
+						{/if}
 						{#if entry.temperature_c}
 							<div class="param">
 								<span class="label">{@html icons.temp} Temp</span>
@@ -105,19 +119,22 @@
 							<p class="notes-text">{entry.notes}</p>
 						</div>
 					{/if}
-				</div>
+				</article>
 			{/each}
 		</section>
 	{/if}
 
 	{#if pourover.length > 0}
 		<section>
-			<h2>Pour Over</h2>
+			<h2>Pour Over <span class="count">{pourover.length}</span></h2>
 			{#each pourover as entry}
-				<div class="card">
+				{@const grinds = getGrinds(entry)}
+				<article class="card">
 					<div class="card-header">
-						<h3>{entry.bean}</h3>
-						<span class="roaster">{entry.roaster}</span>
+						<div class="card-title">
+							<span class="roaster">{entry.roaster}</span>
+							<h3>{entry.bean}</h3>
+						</div>
 						{#if entry.method_name}
 							<span class="method-badge">{entry.method_name}</span>
 						{/if}
@@ -136,12 +153,21 @@
 							<span class="label">{@html icons.brewer} Brewer</span>
 							<span class="value">{entry.brewer}</span>
 						</div>
-						{#each getGrinds(entry) as grind}
+						{#if grinds.length > 0}
 							<div class="param">
 								<span class="label">{@html icons.grind} Grind</span>
-								<span class="value">{grind.setting}{#if grind.type} &middot; {grind.type}{/if}</span>
+								{#if grinds.length === 1 && !grinds[0].type}
+									<span class="value">{formatRange(grinds[0].setting)}</span>
+								{:else}
+									<div class="grind-grid">
+										{#each grinds as grind}
+											<span class="grind-name">{grind.type ?? '—'}</span>
+											<span class="grind-setting">{formatRange(grind.setting)}</span>
+										{/each}
+									</div>
+								{/if}
 							</div>
-						{/each}
+						{/if}
 						{#if entry.temperature_c}
 							<div class="param">
 								<span class="label">{@html icons.temp} Temp</span>
@@ -201,149 +227,241 @@
 							<p class="notes-text">{entry.notes}</p>
 						</div>
 					{/if}
-				</div>
+				</article>
 			{/each}
 		</section>
 	{/if}
 </main>
 
 <style>
+	:global(:root) {
+		--bg: #f6f4ef;
+		--surface: #ffffff;
+		--ink: #23201b;
+		--ink-soft: #5c564d;
+		--ink-muted: #86806f;
+		--line: #e4dfd4;
+		--line-soft: #eeeae0;
+		--accent: #7c5335;
+		--serif: 'Source Serif 4', Georgia, serif;
+		--sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	}
+
 	:global(body) {
 		margin: 0;
-		background: #faf9f6;
-		font-family: 'Source Serif 4', 'Georgia', serif;
-		color: #2c2c2c;
+		background: var(--bg);
+		font-family: var(--serif);
+		color: var(--ink);
+		-webkit-font-smoothing: antialiased;
 	}
 
 	main {
-		max-width: 640px;
+		max-width: 680px;
 		margin: 0 auto;
-		padding: 3rem 1.5rem;
+		padding: 3.5rem 1.5rem 4rem;
+	}
+
+	/* Site header */
+	.site-header {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 1rem;
+		padding-bottom: 1.25rem;
+		margin-bottom: 2.75rem;
+		border-bottom: 1px solid var(--line);
 	}
 
 	h1 {
-		font-size: 2.5rem;
+		font-size: 1.9rem;
 		font-weight: 700;
-		margin: 0 0 0.25rem;
-		letter-spacing: -0.02em;
+		margin: 0;
+		letter-spacing: -0.01em;
 	}
 
 	.subtitle {
-		font-size: 1.1rem;
-		color: #888;
-		margin: 0 0 2.5rem;
+		font-family: var(--sans);
+		font-size: 0.75rem;
+		font-weight: 500;
+		text-transform: uppercase;
+		letter-spacing: 0.14em;
+		color: var(--ink-muted);
+		margin: 0;
 	}
 
+	/* Section headers */
 	h2 {
-		font-size: 1.3rem;
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		font-family: var(--sans);
+		font-size: 0.78rem;
 		font-weight: 600;
-		margin: 0 0 1rem;
 		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: #666;
+		letter-spacing: 0.12em;
+		color: var(--ink-soft);
+		margin: 0 0 1.25rem;
+	}
+
+	h2::after {
+		content: '';
+		flex: 1;
+		height: 1px;
+		background: var(--line);
+	}
+
+	.count {
+		font-weight: 500;
+		color: var(--ink-muted);
 	}
 
 	section {
-		margin-bottom: 2.5rem;
+		margin-bottom: 3rem;
 	}
 
+	/* Cards */
 	.card {
-		background: #fff;
-		border: 1px solid #e8e6e1;
-		border-radius: 12px;
+		background: var(--surface);
+		border: 1px solid var(--line);
+		border-radius: 10px;
 		padding: 1.5rem;
-		margin-bottom: 1rem;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+		margin-bottom: 1.25rem;
+		box-shadow: 0 1px 2px rgba(35, 32, 27, 0.04), 0 4px 12px rgba(35, 32, 27, 0.03);
 	}
 
 	.card-header {
-		margin-bottom: 1rem;
-	}
-
-	.card-header h3 {
-		font-size: 1.25rem;
-		font-weight: 600;
-		margin: 0 0 0.2rem;
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 1rem;
+		padding-bottom: 1rem;
+		margin-bottom: 1.15rem;
+		border-bottom: 1px solid var(--line-soft);
 	}
 
 	.roaster {
-		font-size: 0.95rem;
-		color: #999;
+		display: block;
+		font-family: var(--sans);
+		font-size: 0.72rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--accent);
+		margin-bottom: 0.3rem;
 	}
 
+	.card-header h3 {
+		font-size: 1.3rem;
+		font-weight: 600;
+		margin: 0;
+		letter-spacing: -0.01em;
+	}
+
+	.method-badge {
+		flex-shrink: 0;
+		padding: 0.3rem 0.7rem;
+		border: 1px solid var(--line);
+		border-radius: 999px;
+		background: var(--bg);
+		font-family: var(--sans);
+		font-size: 0.7rem;
+		font-weight: 600;
+		color: var(--ink-soft);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		white-space: nowrap;
+	}
+
+	/* Parameter grid */
 	.params {
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);
-		gap: 0.75rem;
+		gap: 1rem 1.25rem;
 	}
 
 	.param {
 		display: flex;
 		flex-direction: column;
+		gap: 0.3rem;
 	}
 
 	.label {
-		font-size: 0.75rem;
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+		font-family: var(--sans);
+		font-size: 0.68rem;
+		font-weight: 600;
 		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: #aaa;
+		letter-spacing: 0.09em;
+		color: var(--ink-muted);
 		display: flex;
 		align-items: center;
-		gap: 0.3rem;
+		gap: 0.35rem;
 	}
 
 	.value {
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-		font-size: 1.05rem;
-		font-weight: 500;
+		font-family: var(--sans);
+		font-size: 1rem;
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+		color: var(--ink);
 	}
 
+	/* Grind: one header, grid of grinder → setting */
+	.grind-grid {
+		display: grid;
+		grid-template-columns: max-content 1fr;
+		column-gap: 0.6rem;
+		row-gap: 0.2rem;
+		align-items: baseline;
+	}
+
+	.grind-name {
+		font-family: var(--sans);
+		font-size: 0.82rem;
+		font-weight: 500;
+		color: var(--ink-soft);
+	}
+
+	.grind-setting {
+		font-family: var(--sans);
+		font-size: 0.95rem;
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+		color: var(--ink);
+	}
+
+	/* Notes */
 	.notes {
-		margin: 1.25rem 0 0;
+		margin-top: 1.25rem;
 		padding-top: 1rem;
-		border-top: 1px solid #f0eeea;
+		border-top: 1px solid var(--line-soft);
 	}
 
 	.notes-label {
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-		font-size: 0.75rem;
+		font-family: var(--sans);
+		font-size: 0.68rem;
+		font-weight: 600;
 		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: #aaa;
+		letter-spacing: 0.09em;
+		color: var(--ink-muted);
 		display: flex;
 		align-items: center;
-		gap: 0.3rem;
+		gap: 0.35rem;
 	}
 
 	.notes-text {
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-		margin: 0.4rem 0 0;
-		color: #666;
-		font-size: 0.95rem;
-		line-height: 1.5;
+		margin: 0.45rem 0 0;
+		font-family: var(--serif);
+		font-size: 0.98rem;
+		font-style: italic;
+		line-height: 1.55;
+		color: var(--ink-soft);
 	}
 
-	/* Method badge */
-	.method-badge {
-		display: inline-block;
-		margin-top: 0.4rem;
-		padding: 0.25rem 0.6rem;
-		background: #f0eeea;
-		border-radius: 6px;
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-		font-size: 0.75rem;
-		font-weight: 500;
-		color: #666;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-	}
-
-	/* Pour schedule section */
+	/* Pour schedule */
 	.pour-schedule {
-		margin: 1.25rem 0 0;
+		margin-top: 1.25rem;
 		padding-top: 1rem;
-		border-top: 1px solid #f0eeea;
+		border-top: 1px solid var(--line-soft);
 	}
 
 	.pour-schedule-header {
@@ -351,14 +469,15 @@
 	}
 
 	.pour-schedule-label {
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-		font-size: 0.75rem;
+		font-family: var(--sans);
+		font-size: 0.68rem;
+		font-weight: 600;
 		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: #aaa;
+		letter-spacing: 0.09em;
+		color: var(--ink-muted);
 		display: flex;
 		align-items: center;
-		gap: 0.3rem;
+		gap: 0.35rem;
 	}
 
 	/* Timeline */
@@ -374,7 +493,7 @@
 		top: 0;
 		bottom: 0;
 		width: 2px;
-		background: linear-gradient(to bottom, #e8e6e1 0%, #e8e6e1 100%);
+		background: var(--line-soft);
 	}
 
 	.timeline-step {
@@ -393,8 +512,8 @@
 		left: -2rem;
 		width: 1.5rem;
 		height: 1.5rem;
-		background: #fff;
-		border: 2px solid #e8e6e1;
+		background: var(--surface);
+		border: 1.5px solid var(--line);
 		border-radius: 50%;
 		display: flex;
 		align-items: center;
@@ -403,10 +522,11 @@
 	}
 
 	.step-number {
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+		font-family: var(--sans);
 		font-size: 0.7rem;
 		font-weight: 600;
-		color: #888;
+		font-variant-numeric: tabular-nums;
+		color: var(--accent);
 	}
 
 	.timeline-content {
@@ -418,30 +538,40 @@
 		display: flex;
 		align-items: baseline;
 		gap: 0.5rem;
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+		font-family: var(--sans);
 	}
 
 	.pour-water {
 		font-size: 1rem;
 		font-weight: 600;
-		color: #2c2c2c;
+		font-variant-numeric: tabular-nums;
+		color: var(--ink);
 	}
 
 	.pour-time {
 		font-size: 0.85rem;
 		font-weight: 500;
-		color: #999;
+		font-variant-numeric: tabular-nums;
+		color: var(--ink-muted);
 	}
 
 	.timeline-notes {
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+		font-family: var(--sans);
 		font-size: 0.85rem;
-		color: #777;
+		color: var(--ink-soft);
 		margin-top: 0.25rem;
-		font-style: italic;
 	}
 
-	@media (max-width: 480px) {
+	@media (max-width: 520px) {
+		main {
+			padding: 2.5rem 1.25rem 3rem;
+		}
+
+		.site-header {
+			flex-direction: column;
+			gap: 0.35rem;
+		}
+
 		.params {
 			grid-template-columns: repeat(2, 1fr);
 		}
