@@ -1,3 +1,12 @@
+- bean: "Forte"
+  roaster: "Jewel Coffee Cafe Monza"
+  method: espresso
+  dose_g: 18
+  yield_g: 35
+  time_s: 30
+  grind(K6): 26
+  notes: "Medium roast, little to no acidity with great body and crema. Chocolate notes, not much pepper."
+
 - bean: "Veloce"
   roaster: "Jewel Coffee Cafe Monza"
   method: espresso
