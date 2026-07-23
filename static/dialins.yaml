@@ -12,9 +12,9 @@
   method: espresso
   dose_g: 18
   yield_g: 36
-  time_s: 26
-  grind(K6): 26
-  notes: "Medium roast, pretty standard espresso."
+  time_s: 30
+  grind(K6): 23
+  notes: "Medium roast, pretty standard espresso. A little spiciness."
 
 - bean: "Espresso"
   roaster: "Lavazza"
