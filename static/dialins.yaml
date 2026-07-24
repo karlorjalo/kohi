@@ -11,9 +11,9 @@
   roaster: "Jewel Coffee Cafe Monza"
   method: espresso
   dose_g: 18
-  yield_g: 36
-  time_s: 30
-  grind(K6): 23
+  yield_g: 50
+  time_s: 32
+  grind(K6): 25
   notes: "Medium roast, pretty standard espresso. A little spiciness."
 
 - bean: "Espresso"
